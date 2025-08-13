@@ -11,9 +11,15 @@ fake_users = {
 }
 
 def authenticate_user(username: str, password: str):
+    print(f"🔐 Intento de login - Usuario: {username}")
     user = fake_users.get(username)
-    if not user or user["password"] != password:
+    if not user:
+        print(f"❌ Usuario '{username}' no encontrado")
         return False
+    if user["password"] != password:
+        print(f"❌ Contraseña incorrecta para usuario '{username}'")
+        return False
+    print(f"✅ Login exitoso para usuario '{username}'")
     return user
 
 def create_access_token(data: dict):
@@ -27,7 +33,8 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
-            raise HTTPException(status_code=401)
+            raise HTTPException(status_code=401, detail="Token inválido: falta username")
         return username
-    except JWTError:
-        raise HTTPException(status_code=401)
+    except JWTError as e:
+        print(f"❌ Error JWT: {e}")
+        raise HTTPException(status_code=401, detail="Token inválido o expirado")

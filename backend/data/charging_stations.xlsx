@@ -1,0 +1,21 @@
+name,location,max_kw,is_active
+Tesla Supercharger Madrid Centro,Madrid - Gran Vía 28,150.0,true
+Iberdrola Barcelona Port,Barcelona - Port Vell,50.0,true
+Endesa X Sevilla Norte,Sevilla - Av. de la Buhaira,75.0,false
+EDP Valencia Centro,Valencia - Plaza del Ayuntamiento,100.0,true
+Repsol Bilbao Guggenheim,Bilbao - Abandoibarra,60.0,true
+Tesla Supercharger Zaragoza,Zaragoza - Av. César Augusto,150.0,false
+Iberdrola Málaga Costa,Málaga - Paseo Marítimo,80.0,true
+Endesa X Valladolid,Valladolid - Campo Grande,45.0,true
+EDP Santander Centro,Santander - Paseo Pereda,90.0,false
+Repsol Granada Alhambra,Granada - Av. de la Constitución,55.0,true
+Tesla Supercharger Córdoba,Córdoba - Ronda de los Tejares,150.0,true
+Iberdrola Pamplona,Pamplona - Plaza del Castillo,70.0,false
+Endesa X Murcia Centro,Murcia - Gran Vía Alfonso X,65.0,true
+EDP Oviedo,Oviedo - Calle Uría,85.0,true
+Repsol Toledo Histórico,Toledo - Plaza de Zocodover,40.0,false
+Tesla Supercharger Alicante,Alicante - Explanada de España,150.0,true
+Iberdrola Vitoria,Vitoria-Gasteiz - Plaza de la Virgen Blanca,95.0,true
+Endesa X Cáceres,Cáceres - Plaza Mayor,50.0,false
+EDP Salamanca Universidad,Salamanca - Plaza Mayor,75.0,true
+Repsol Burgos Catedral,Burgos - Plaza del Rey San Fernando,60.0,true

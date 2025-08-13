@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: evdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pruebas12345
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend FastAPI
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:pruebas12345@db:5432/evdb
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  # Frontend Next.js
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
