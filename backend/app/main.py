@@ -50,35 +50,35 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = auth.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
-    token = auth.create_access_token({"sub": user["username"]})
-    print(f"✅ Token generado exitosamente para: {form_data.username}")
-    return {"access_token": token, "token_type": "bearer"}
+    token = auth.create_access_token({"sub": user["username"], "role": user["role"]})
+    print(f"✅ Token generado exitosamente para: {form_data.username} (rol: {user['role']})")
+    return {"access_token": token, "token_type": "bearer", "role": user["role"]}
 
-# Crear estación
+# Crear estación (solo admin)
 @app.post("/stations/", response_model=schemas.StationOut)
-def create_station(station: schemas.StationCreate, db: Session = Depends(get_db), user: str = Depends(auth.get_current_user)):
+def create_station(station: schemas.StationCreate, db: Session = Depends(get_db), user: dict = Depends(auth.require_admin)):
     return crud.create_station(db, station)
 
-# Listar estaciones
+# Listar estaciones (admin y cliente)
 @app.get("/stations/", response_model=list[schemas.StationOut])
-def list_stations(db: Session = Depends(get_db), user: str = Depends(auth.get_current_user)):
+def list_stations(db: Session = Depends(get_db), user: dict = Depends(auth.get_current_user)):
     return crud.get_stations(db)
 
-# Actualizar estación
+# Actualizar estación (solo admin)
 @app.put("/stations/{station_id}", response_model=schemas.StationOut)
-def update_station(station_id: int, update: schemas.StationUpdate, db: Session = Depends(get_db), user: str = Depends(auth.get_current_user)):
+def update_station(station_id: int, update: schemas.StationUpdate, db: Session = Depends(get_db), user: dict = Depends(auth.require_admin)):
     return crud.update_station_status(db, station_id, update.is_active)
 
-# Endpoint para cargar datos iniciales
+# Endpoint para cargar datos iniciales (solo admin)
 @app.post("/load-initial-data")
-def load_initial_data(user: str = Depends(auth.get_current_user)):
+def load_initial_data(user: dict = Depends(auth.require_admin)):
     load_stations_from_csv()
     count = get_stations_count()
     return {"message": f"Datos cargados. Total de estaciones: {count}"}
 
-# Endpoint para forzar carga de datos (limpia y recarga)
+# Endpoint para forzar carga de datos (solo admin)
 @app.post("/force-load-data")
-def force_load_data(db: Session = Depends(get_db), user: str = Depends(auth.get_current_user)):
+def force_load_data(db: Session = Depends(get_db), user: dict = Depends(auth.require_admin)):
     # Limpiar datos existentes
     db.query(models.Station).delete()
     db.commit()
@@ -88,9 +88,9 @@ def force_load_data(db: Session = Depends(get_db), user: str = Depends(auth.get_
     count = get_stations_count()
     return {"message": f"Datos recargados. Total de estaciones: {count}"}
 
-# Endpoint para obtener estadísticas
+# Endpoint para obtener estadísticas (solo admin)
 @app.get("/stats")
-def get_stats(db: Session = Depends(get_db), user: str = Depends(auth.get_current_user)):
+def get_stats(db: Session = Depends(get_db), user: dict = Depends(auth.require_admin)):
     total = db.query(models.Station).count()
     active = db.query(models.Station).filter(models.Station.is_active == True).count()
     inactive = total - active
@@ -100,14 +100,14 @@ def get_stats(db: Session = Depends(get_db), user: str = Depends(auth.get_curren
         "inactive_stations": inactive
     }
 
-# Endpoint para obtener estaciones filtradas
+# Endpoint para obtener estaciones filtradas (admin y cliente)
 @app.get("/stations/filtered", response_model=list[schemas.StationOut])
 def get_filtered_stations(
     status: str = None,
     min_kw: float = None,
     max_kw: float = None,
     db: Session = Depends(get_db),
-    user: str = Depends(auth.get_current_user)
+    user: dict = Depends(auth.get_current_user)
 ):
     return crud.get_filtered_stations(db, status, min_kw, max_kw)
 
@@ -116,12 +116,18 @@ def get_filtered_stations(
 def test_auth():
     return {
         "message": "Credenciales válidas:",
-        "username": "admin",
-        "password": "admin123",
+        "users": [
+            {"username": "admin", "password": "admin123", "role": "admin", "access": "Acceso completo"},
+            {"username": "cliente", "password": "cliente123", "role": "cliente", "access": "Solo listado"}
+        ],
         "endpoint": "POST /token"
     }
 
 # Endpoint para verificar si el usuario está autenticado
 @app.get("/me")
-def get_current_user_info(user: str = Depends(auth.get_current_user)):
-    return {"username": user, "message": "Usuario autenticado correctamente"}
+def get_current_user_info(user: dict = Depends(auth.get_current_user)):
+    return {
+        "username": user["username"], 
+        "role": user["role"],
+        "message": "Usuario autenticado correctamente"
+    }

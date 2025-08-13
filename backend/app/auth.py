@@ -7,7 +7,8 @@ from datetime import datetime, timedelta
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 fake_users = {
-    "admin": {"username": "admin", "password": "admin123"}
+    "admin": {"username": "admin", "password": "admin123", "role": "admin"},
+    "cliente": {"username": "cliente", "password": "cliente123", "role": "cliente"}
 }
 
 def authenticate_user(username: str, password: str):
@@ -32,9 +33,15 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
+        role = payload.get("role")
         if username is None:
             raise HTTPException(status_code=401, detail="Token inválido: falta username")
-        return username
+        return {"username": username, "role": role}
     except JWTError as e:
         print(f"❌ Error JWT: {e}")
         raise HTTPException(status_code=401, detail="Token inválido o expirado")
+
+def require_admin(current_user: dict = Depends(get_current_user)):
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Acceso denegado: Se requieren permisos de administrador")
+    return current_user
