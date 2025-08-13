@@ -1,6 +1,7 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from app.database import SessionLocal
 from app.crud import update_station_status
+from app import models
 
 def toggle_station():
     db = SessionLocal()
